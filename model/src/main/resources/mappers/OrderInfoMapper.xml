@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.secKill.model.mapper.OrderInfoMapper">
+	<resultMap id="BaseResultMap" type="com.born.secKill.model.entity.OrderInfo">
+		<id column="code" property="code" jdbcType="VARCHAR"/>
+		<result column="item_id" property="itemId" jdbcType="INTEGER"/>
+		<result column="kill_id" property="killId" jdbcType="INTEGER"/>
+		<result column="user_id" property="userId" jdbcType="VARCHAR"/>
+		<result column="status_code" property="statusCode" jdbcType="TINYINT"/>
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+	</resultMap>
+	<sql id="Base_Column_List">
+    code, item_id, kill_id, user_id, status_code, create_time
+  </sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="com.born.secKill.model.entity.OrderInfo">
+		select
+		<include refid="Base_Column_List"/>
+		from order_info
+		where code = #{code,jdbcType=VARCHAR}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from order_info
+    where code = #{code,jdbcType=VARCHAR}
+  </delete>
+	<insert id="insert" parameterType="com.born.secKill.model.entity.OrderInfo">
+    insert into order_info (code, item_id, kill_id,
+      user_id, status_code, create_time
+      )
+    values (#{code,jdbcType=VARCHAR}, #{itemId,jdbcType=INTEGER}, #{killId,jdbcType=INTEGER}, 
+      #{userId,jdbcType=VARCHAR}, #{statusCode,jdbcType=TINYINT}, #{createTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+	<insert id="insertSelective" parameterType="com.born.secKill.model.entity.OrderInfo">
+		insert into order_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="code != null">
+				code,
+			</if>
+			<if test="itemId != null">
+				item_id,
+			</if>
+			<if test="killId != null">
+				kill_id,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+			<if test="statusCode != null">
+				status_code,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="code != null">
+				#{code,jdbcType=VARCHAR},
+			</if>
+			<if test="itemId != null">
+				#{itemId,jdbcType=INTEGER},
+			</if>
+			<if test="killId != null">
+				#{killId,jdbcType=INTEGER},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="statusCode != null">
+				#{statusCode,jdbcType=TINYINT},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.born.secKill.model.entity.OrderInfo">
+		update order_info
+		<set>
+			<if test="itemId != null">
+				item_id = #{itemId,jdbcType=INTEGER},
+			</if>
+			<if test="killId != null">
+				kill_id = #{killId,jdbcType=INTEGER},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="statusCode != null">
+				status_code = #{statusCode,jdbcType=TINYINT},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where code = #{code,jdbcType=VARCHAR}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.born.secKill.model.entity.OrderInfo">
+    update order_info
+    set item_id = #{itemId,jdbcType=INTEGER},
+      kill_id = #{killId,jdbcType=INTEGER},
+      user_id = #{userId,jdbcType=VARCHAR},
+      status_code = #{statusCode,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where code = #{code,jdbcType=VARCHAR}
+  </update>
+
+
+	<!--分页查询订单详细记录-->
+	<select id="listDetailResult" resultType="com.born.secKill.model.dto.KillSuccessUserInfo">
+	    SELECT
+	      a.*,
+	      TIMESTAMPDIFF(MINUTE,a.create_time,NOW()) AS diffTime,
+	      b.user_name,
+	      b.phone,
+	      b.email,
+	      c.name AS itemName,
+	      d.status_msg AS statusMsg
+	    from order_info AS a
+	      LEFT JOIN user b ON b.id = a.user_id
+	      LEFT JOIN item c ON c.id = a.item_id
+	      LEFT JOIN order_status d ON d.status_code = a.status_code
+  -- 测试时该条件不应出现，暂时去掉
+          AND b.is_active = 1
+        limit #{pageStartIndex},#{pageSize}
+	</select>
+
+
+	<!--根据秒杀活动跟用户Id查询用户的抢购数量-->
+	<select id="countByKillUserId" resultType="java.lang.Integer">
+		SELECT
+		COUNT(*) AS total
+		FROM
+		order_info
+		WHERE
+		user_id = #{userId}
+		AND kill_id = #{killId}
+		<!-- AND `status_code` IN (-1, 0) -->
+		AND `status_code` IN (0)
+	</select>
+
+	<!--查询订单的详细信息-->
+	<select id="selectDetailResultByCode" resultType="com.born.secKill.model.dto.KillSuccessUserInfo">
+    SELECT
+      a.*,
+      TIMESTAMPDIFF(MINUTE,a.create_time,NOW()) AS diffTime,
+      b.user_name,
+      b.phone,
+      b.email,
+      c.name AS itemName
+    from order_info AS a
+      LEFT JOIN user b ON b.id = a.user_id
+      LEFT JOIN item c ON c.id = a.item_id
+    WHERE a.code = #{code}
+--           AND b.is_active = 1   测试时该条件不应出现，暂时去掉
+  </select>
+
+	<!--更新未付款订单为失效状态-->
+	<update id="expireOrder">
+    UPDATE order_info
+    SET status_code = -1
+    WHERE code = #{code} AND status_code = 0
+  </update>
+
+	<!--批量获取待处理的已保存订单记录-->
+	<select id="listExpireOrder" resultType="com.born.secKill.model.entity.OrderInfo">
+    SELECT
+        a.*,TIMESTAMPDIFF(MINUTE,a.create_time,NOW()) AS diffTime
+    FROM
+        order_info AS a
+    WHERE
+        a.`status_code` = 0
+  </select>
+
+
+	<select id="listEffectiveOrder" resultType="com.born.secKill.model.entity.OrderInfo">
+    SELECT
+        a.*,TIMESTAMPDIFF(MINUTE,a.create_time,NOW()) AS diffTime
+    FROM
+        order_info AS a
+    WHERE
+        a.`status_code` != -1
+	</select>
+
+	<select id="countOrder" resultType="java.lang.Integer">
+		select count(*) from order_info
+	</select>
+
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.secKill.model.mapper.OrderStatusMapper">
+	<resultMap id="BaseResultMap" type="com.born.secKill.model.entity.OrderStatus">
+		<id column="status_code" property="statusCode" jdbcType="INTEGER"/>
+		<result column="status_msg" property="statusMsg" jdbcType="VARCHAR"/>
+	</resultMap>
+	<sql id="Base_Column_List">
+		status_code,status_msg
+  	</sql>
+
+	<select id="getStatus" resultType="com.born.secKill.model.entity.OrderStatus">
+		select
+		<include refid="Base_Column_List" />
+		from order_status
+		where status_code=#{statusCode}
+	</select>
+
+	<select id="listStatus" resultType="com.born.secKill.model.entity.OrderStatus">
+		select
+		<include refid="Base_Column_List" />
+		from order_status
+	</select>
+
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

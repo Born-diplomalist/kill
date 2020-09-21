@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.born.secKill.model.mapper.SeckillMapper" >
+  <resultMap id="BaseResultMap" type="com.born.secKill.model.entity.SecKill" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="item_id" property="itemId" jdbcType="INTEGER" />
+    <result column="total" property="total" jdbcType="INTEGER" />
+    <result column="start_time" property="startTime"/>
+    <result column="end_time" property="endTime"/>
+    <result column="is_active" property="isActive" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime"/>
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, item_id, total, start_time, end_time, is_active, create_time
+  </sql>
+
+  <insert id="insertKill">
+      insert into sec_kill (id,item_id, total, start_time, end_time, is_active, create_time)
+      values(null,#{kill.itemId},#{kill.total},#{kill.startTime},#{kill.endTime},#{kill.isActive},now())
+    </insert>
+
+  <update id="updateKill">
+      UPDATE sec_kill
+      <set>
+        <if test="kill.itemId!=null">
+          item_id=#{kill.itemId},
+        </if>
+        <if test="kill.total!=null">
+          total=#{kill.total},
+        </if>
+        <if test="kill.startTime!=null">
+          start_time=#{kill.startTime},
+        </if>
+        <if test="kill.endTime!=null">
+          end_time=#{kill.endTime},
+        </if>
+        <if test="kill.isActive!=null">
+          is_active=#{kill.isActive},
+        </if>
+      </set>
+      where id=#{kill.id}
+    </update>
+
+	<!--查询已启用的活动商品列表-->
+  <select id="listActiveKill" resultType="com.born.secKill.model.entity.SecKill">
+    SELECT
+      a.*,
+      b.name AS itemName,
+      (
+        CASE WHEN (now() BETWEEN a.start_time AND a.end_time AND a.total > 0)
+          THEN 1
+        ELSE 0
+        END
+      )      AS canKill
+    FROM sec_kill AS a
+        LEFT JOIN item AS b ON b.id = a.item_id
+    WHERE a.is_active = 1
+  </select>
+
+	<!--查询所有活动商品列表-->
+  <select id="listAllKill" resultType="com.born.secKill.model.entity.SecKill">
+    SELECT
+      a.*,
+      b.name AS itemName,
+      (
+        CASE WHEN (now() BETWEEN a.start_time AND a.end_time AND a.total > 0)
+          THEN 1
+        ELSE 0
+        END
+      )      AS canKill
+    FROM sec_kill AS a
+        LEFT JOIN item AS b ON b.id = a.item_id
+  </select>
+
+  <!--获取秒杀详情-->
+  <select id="selectKillById" resultType="com.born.secKill.model.entity.SecKill">
+    SELECT
+      a.*,
+      b.name AS itemName,
+      (CASE WHEN (now() BETWEEN a.start_time AND a.end_time)
+        THEN 1
+       ELSE 0
+       END)  AS canKill
+    FROM sec_kill AS a LEFT JOIN item AS b ON b.id = a.item_id
+    WHERE  a.id =#{id} AND a.total>0
+--     AND a.is_active = 1  设置后查不到禁用的商品，无法恢复为启用状态
+  </select>
+
+  <!--秒杀库存-1-->
+  <update id="updateKillStock">
+    UPDATE sec_kill
+    SET total = total - 1
+    WHERE id = #{killId} AND total>0
+  </update>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
